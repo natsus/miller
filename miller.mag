@@ -1,0 +1,42 @@
+// Miller's Algorithmの実装
+
+// 有限体の定義
+Fq := GF(13);
+// 楕円曲線の定義
+E := EllipticCurve([Fq|2,3]);
+
+// P の生成
+tmp := #E(Fq);
+r := 3; // prime number
+l := 6;	// coset 余因子
+
+/* #E(Fq) = r*l
+ * l*Random(E(Fq)) = l*{a*Ran(E(Fq)[r]) + b*Ran(E(Fq)[l])}
+ *                 = l*a*Ran(E(Fq)[r]) + Inf
+ *                 = l*a*Rand(E(Fq)[r]) = Q
+ *    i.e. A*Rand(E(Fq)[r]) ∈ E(Fq)[r]
+ */
+P := l*Random(E);
+Q := Random(E);
+
+// Rの生成
+R := Random(E);
+R:=Random(E) while (R eq P) or (R eq -Q) or (R eq (P-Q)) or (R eq (0:1:0));
+
+// 関数の初期設定
+PR_func<X,Y> := PolynomialRing(Fq,2);
+/*
+> f := 2*X+Y;
+> Evaluate(f,[2,1]);
+*/ 
+
+f := 1;
+V := P;
+
+j := len - 2;
+repeat
+
+  j := j -1;
+until j eq 0;
+
+
