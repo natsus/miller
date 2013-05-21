@@ -1,10 +1,12 @@
 // Miller's Algorithmの実装
 
 // 有限体の定義
-Fq := GF(11);
+Fq := GF(13);
+Fqk := GF(13,4);
 // 楕円曲線の定義
-a := Fq!-1; b := Fq!1;
+a := Fq!5; b := Fq!11;
 E := EllipticCurve([Fq|a,b]);
+Ek := EllipticCurve([Fqk|a,b]);
 
 // P の生成
 tmp := #E(Fq);
@@ -18,16 +20,19 @@ c := tmp div r;	// coset(余因子)
  *                 = c*a*Rand(E(Fq)[r]) = Q
  *    i.e. A*Rand(E(Fq)[r]) ∈ E(Fq)[r]
  */
-P := c*Random(E);P := 2*E![3,6,1];
-Q := Random(E);Q := 2*E![3,6,1];
+P := c*Random(E); P := 2*E![7,5,1];
+Q := Random(Ek); Q := 2*Ek![Fqk.1^22526 , Fqk.1^17094 , 1];
 r_a := Intseq(r,2);
 len := #r_a;
 
 // Rの生成
+/*
 repeat
-  R := Random(E);
-until (R ne P) and (R ne -Q) and (R ne (P-Q)) and (R ne Identity(E));
-R := E![0,1,1];
+  R := Random(Ek);
+until Order(Q)*R ne Identity(Ek);
+*/
+R := Ek![Fqk.1^4415 , Fqk.1^15357 , 1];
+
 
 // 関数の初期設定
 PR_func<X,Y> := PolynomialRing(Fq,2);
@@ -102,6 +107,8 @@ l;v;
 
   j := j -1;
 until j eq 0;
+
+f := f^5712;
 
 // 出力
 f;
