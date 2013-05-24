@@ -1,46 +1,90 @@
 // Miller's Algorithmの実装
 
 // 有限体の定義
-Fq := GF(13);
-Fqk := GF(13,4);
+q := 13;
+Fq := GF(q);
+
+// kの計算
+
+k := 1;
+while Gcd(r,(q^k)-1) eq 1 do
+  k := +1;
+end while;
+
+// 拡大体の定義 
+Fqk := GF(q,k);
+
 // 楕円曲線の定義
 a := Fq!5; b := Fq!11;
 E := EllipticCurve([Fq|a,b]);
 Ek := EllipticCurve([Fqk|a,b]);
 
-// P の生成
-tmp := #E(Fq);
-F := Factorization(tmp);
-r := F[#F][1];  // prime number
-c := tmp div r;	// coset(余因子)
 
-/* #E(Fq) = r*c
- * c*Random(E(Fq)) = c*{a*Ran(E(Fq)[r]) + b*Ran(E(Fq)[c])}
- *                 = c*a*Ran(E(Fq)[r]) + Inf
- *                 = c*a*Rand(E(Fq)[r]) = Q
- *    i.e. A*Rand(E(Fq)[r]) ∈ E(Fq)[r]
- */
-P := c*Random(E); P := 2*E![7,5,1];
-Q := Random(Ek); Q := 2*Ek![Fqk.1^22526 , Fqk.1^17094 , 1];
-r_a := Intseq(r,2);
-len := #r_a;
+function TatePairing(P, Q, r)
+  
+  // P の生成
+  /*
+  tmp := #E(Fq);
+  F := Factorization(tmp);
+  r := F[#F][1];  // prime number
+  c := tmp div r;	// coset(余因子)
+  */
+  
+  /* #E(Fq) = r*c
+   * c*Random(E(Fq)) = c*{a*Ran(E(Fq)[r]) + b*Ran(E(Fq)[c])}
+   *                 = c*a*Ran(E(Fq)[r]) + Inf
+   *                 = c*a*Rand(E(Fq)[r]) = Q
+   *    i.e. A*Rand(E(Fq)[r]) ∈ E(Fq)[r]
+   */
+  /*
+  P := c*Random(E); P := 2*E![7,5,1];
+  Q := Random(Ek); Q := 2*Ek![Fqk.1^22526 , Fqk.1^17094 , 1];
+  r_a := Intseq(r,2);
+  len := #r_a;
+  */
+  
+  Ek := Scheme(Q);
+  Fqk := Parent(Ek);
 
-// Rの生成
-/*
-repeat
-  R := Random(Ek);
-until Order(Q)*R ne Identity(Ek);
-*/
-R := Ek![Fqk.1^4415 , Fqk.1^15357 , 1];
-
-
-// 関数の初期設定
-PR_func<X,Y> := PolynomialRing(Fq,2);
-/*
-> PR_func<X,Y> := PolynomialRing(Fq,2);
-> f := 2*X+Y;
-> Evaluate(f,[2,1]);
-*/ 
+  // Rの生成
+  repeat
+    R := Random(Ek);
+  until Order(Q)*R ne Identity(Ek);
+  
+  // R := Ek![Fqk.1^4415 , Fqk.1^15357 , 1];
+  
+  
+  // 関数の初期設定
+  PR_func<X,Y> := PolynomialRing(Fqk,2);
+  
+P;Q;R;
+  
+  f := 1;
+  V := P;
+  
+  j := len - 1;
+  repeat
+    l := calculate_tangent_line(V);
+    v := calculate_vertical_line(2*V);
+    V := 2*V;
+l;v;
+    f := f*f*(Evaluate(l,trans_xy(Q+R))*Evaluate(v,trans_xy(R)))*(Evaluate(v,trans_xy(Q+R))*Evaluate(l,trans_xy(R)))^-1;
+  
+    if r_a[j] eq 1 then
+      l := calculate_straight_line(V,P);
+      v := calculate_vertical_line(V+P);
+      V := V+P;
+      f := f*(Evaluate(l,trans_xy(Q+R))*Evaluate(v,trans_xy(R)))*(Evaluate(v,trans_xy(Q+R))*Evaluate(l,trans_xy(R)))^-1;
+    end if;
+  
+    j := j -1;
+  until j eq 0;
+  
+  f := f^5712;
+  
+  return f;
+  
+end function;
 
 // 二点を通る直線を求める
 function calculate_straight_line(A, B)
@@ -82,34 +126,4 @@ end function;
 function trans_xy(A)
   return [A[1],A[2]];
 end function;
-
-
-
-P;Q;R;
-
-f := 1;
-V := P;
-
-j := len - 1;
-repeat
-  l := calculate_tangent_line(V);
-  v := calculate_vertical_line(2*V);
-  V := 2*V;
-l;v;
-  f := f*f*(Evaluate(l,trans_xy(Q+R))*Evaluate(v,trans_xy(R)))*(Evaluate(v,trans_xy(Q+R))*Evaluate(l,trans_xy(R)))^-1;
-
-  if r_a[j] eq 1 then
-    l := calculate_straight_line(V,P);
-    v := calculate_vertical_line(V+P);
-    V := V+P;
-    f := f*(Evaluate(l,trans_xy(Q+R))*Evaluate(v,trans_xy(R)))*(Evaluate(v,trans_xy(Q+R))*Evaluate(l,trans_xy(R)))^-1;
-  end if;
-
-  j := j -1;
-until j eq 0;
-
-f := f^5712;
-
-// 出力
-f;
 
